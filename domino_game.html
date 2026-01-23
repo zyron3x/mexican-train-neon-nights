@@ -293,40 +293,52 @@
     </div>
 
     <script>
+        // ============================================
+        // DOMINO CLASS - Represents a single domino tile
+        // ============================================
         class Domino {
             constructor(left, right) {
-                this.left = left;
-                this.right = right;
+                this.left = left;   // Left side value (0-6)
+                this.right = right; // Right side value (0-6)
             }
 
+            // Returns a new domino with sides swapped
             flip() {
                 return new Domino(this.right, this.left);
             }
 
+            // Returns sum of both sides
             total() {
                 return this.left + this.right;
             }
 
+            // Checks if both sides have same value
             isDouble() {
                 return this.left === this.right;
             }
 
+            // Compares two dominoes (order-independent)
             equals(other) {
                 return (this.left === other.left && this.right === other.right) ||
                        (this.left === other.right && this.right === other.left);
             }
 
+            // String representation for display
             toString() {
                 return `[${this.left}|${this.right}]`;
             }
         }
 
+        // ============================================
+        // DOMINO GAME CLASS - Core game logic
+        // ============================================
         class DominoGame {
             constructor() {
                 this.reset();
             }
 
             reset() {
+                // Create standard double-six domino set (28 tiles)
                 this.boneyard = [];
                 for (let i = 0; i <= 6; i++) {
                     for (let j = i; j <= 6; j++) {
@@ -335,18 +347,22 @@
                 }
                 this.shuffle(this.boneyard);
 
+                // Deal 7 tiles to each player
                 this.playerHand = this.boneyard.splice(0, 7);
                 this.aiHand = this.boneyard.splice(0, 7);
 
-                this.board = [];
-                this.leftEnd = null;
-                this.rightEnd = null;
+                // Initialize board state
+                this.board = [];        // Played dominoes in order
+                this.leftEnd = null;    // Value at left end of board
+                this.rightEnd = null;   // Value at right end of board
 
+                // Determine starting player
                 this.playerTurn = this.determineFirstPlayer();
                 this.gameOver = false;
                 this.winner = null;
             }
 
+            // Fisher-Yates shuffle algorithm
             shuffle(array) {
                 for (let i = array.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
@@ -354,6 +370,7 @@
                 }
             }
 
+            // Player with highest double goes first (or random if tie)
             determineFirstPlayer() {
                 const playerDoubles = this.playerHand.filter(d => d.isDouble());
                 const aiDoubles = this.aiHand.filter(d => d.isDouble());
@@ -370,27 +387,34 @@
                 return Math.random() < 0.5;
             }
 
+            // Returns array of valid placements: ['left'], ['right'], or ['left', 'right']
             canPlay(domino) {
+                // First move can be played anywhere
                 if (this.board.length === 0) return ['left'];
 
                 const placements = [];
+                // Check if domino matches left end
                 if (domino.left === this.leftEnd || domino.right === this.leftEnd) {
                     placements.push('left');
                 }
+                // Check if domino matches right end
                 if (domino.left === this.rightEnd || domino.right === this.rightEnd) {
                     placements.push('right');
                 }
                 return placements;
             }
 
+            // Plays a domino on specified side, returns true if successful
             playDomino(domino, side) {
                 if (!this.canPlay(domino).includes(side)) return false;
 
                 if (this.board.length === 0) {
+                    // First domino on board
                     this.board.push(domino);
                     this.leftEnd = domino.left;
                     this.rightEnd = domino.right;
                 } else if (side === 'left') {
+                    // Add to left side (flip if needed to match)
                     if (domino.right === this.leftEnd) {
                         this.board.unshift(domino);
                         this.leftEnd = domino.left;
@@ -399,6 +423,7 @@
                         this.leftEnd = domino.right;
                     }
                 } else {
+                    // Add to right side (flip if needed to match)
                     if (domino.left === this.rightEnd) {
                         this.board.push(domino);
                         this.rightEnd = domino.right;
@@ -410,6 +435,7 @@
                 return true;
             }
 
+            // Draws one tile from boneyard, returns null if empty
             drawFromBoneyard() {
                 if (this.boneyard.length > 0) {
                     return this.boneyard.pop();
@@ -417,28 +443,34 @@
                 return null;
             }
 
+            // Returns array of {domino, placements} objects for playable tiles
             getPlayableDominoes(hand) {
                 return hand.map(d => ({ domino: d, placements: this.canPlay(d) }))
                            .filter(item => item.placements.length > 0);
             }
 
+            // Checks win/block conditions and sets winner
             checkGameOver() {
+                // Check if player won by emptying hand
                 if (this.playerHand.length === 0) {
                     this.gameOver = true;
                     this.winner = "Player";
                     return true;
                 }
+                // Check if AI won by emptying hand
                 if (this.aiHand.length === 0) {
                     this.gameOver = true;
                     this.winner = "AI";
                     return true;
                 }
 
+                // Check if game is blocked (neither can play)
                 const playerCanPlay = this.getPlayableDominoes(this.playerHand).length > 0;
                 const aiCanPlay = this.getPlayableDominoes(this.aiHand).length > 0;
 
                 if (!playerCanPlay && !aiCanPlay && this.boneyard.length === 0) {
                     this.gameOver = true;
+                    // Winner has lowest total
                     const playerTotal = this.playerHand.reduce((sum, d) => sum + d.total(), 0);
                     const aiTotal = this.aiHand.reduce((sum, d) => sum + d.total(), 0);
 
@@ -455,15 +487,20 @@
             }
         }
 
+        // ============================================
+        // AI CLASS - Simple AI opponent strategy
+        // ============================================
         class DominoAI {
             constructor(game) {
                 this.game = game;
             }
 
+            // Returns best move as {domino, side} or null if must draw
             chooseMove() {
                 const playable = this.game.getPlayableDominoes(this.game.aiHand);
                 if (playable.length === 0) return null;
 
+                // Strategy: prioritize doubles, then highest scoring tiles
                 const doubles = playable.filter(p => p.domino.isDouble());
                 let chosen;
                 if (doubles.length > 0) {
@@ -476,12 +513,13 @@
             }
         }
 
-        // Game state
+        // ============================================
+        // GAME STATE AND DOM ELEMENTS
+        // ============================================
         let game = new DominoGame();
         let ai = new DominoAI(game);
-        let selectedDomino = null;
+        let selectedDomino = null;  // Currently selected tile by player
 
-        // DOM elements
         const statusEl = document.getElementById('status');
         const aiHandEl = document.getElementById('ai-hand');
         const boardEl = document.getElementById('board');
@@ -495,6 +533,11 @@
         const winnerTitle = document.getElementById('winner-title');
         const winnerScores = document.getElementById('winner-scores');
 
+        // ============================================
+        // UI FUNCTIONS
+        // ============================================
+
+        // Creates a visual domino element
         function createDominoElement(domino, options = {}) {
             const { hidden = false, clickable = false, selected = false } = options;
 
@@ -505,13 +548,16 @@
             if (clickable) el.classList.add('clickable');
             if (selected) el.classList.add('selected');
 
+            // Create left half
             const leftHalf = document.createElement('div');
             leftHalf.className = 'domino-half';
             leftHalf.textContent = hidden ? '?' : domino.left;
 
+            // Create divider line
             const divider = document.createElement('div');
             divider.className = 'domino-divider';
 
+            // Create right half
             const rightHalf = document.createElement('div');
             rightHalf.className = 'domino-half';
             rightHalf.textContent = hidden ? '?' : domino.right;
@@ -520,6 +566,7 @@
             el.appendChild(divider);
             el.appendChild(rightHalf);
 
+            // Add click handler if clickable
             if (clickable && !hidden) {
                 el.addEventListener('click', () => selectDomino(domino));
             }
@@ -527,12 +574,14 @@
             return el;
         }
 
+        // Handles player selecting a domino
         function selectDomino(domino) {
             if (!game.playerTurn || game.gameOver) return;
 
             selectedDomino = domino;
             updateDisplay();
 
+            // Enable/disable play buttons based on valid placements
             const placements = game.canPlay(domino);
             btnLeft.disabled = !placements.includes('left');
             btnRight.disabled = !placements.includes('right');
@@ -544,10 +593,12 @@
             }
         }
 
+        // Plays the selected domino on specified side
         function playSelected(side) {
             if (!selectedDomino || !game.playerTurn) return;
 
             if (game.playDomino(selectedDomino, side)) {
+                // Remove from player's hand
                 const idx = game.playerHand.findIndex(d => d.equals(selectedDomino));
                 if (idx !== -1) game.playerHand.splice(idx, 1);
 
@@ -555,9 +606,11 @@
                 btnLeft.disabled = true;
                 btnRight.disabled = true;
 
+                // Check if game ended
                 if (game.checkGameOver()) {
                     endGame();
                 } else {
+                    // Switch to AI turn
                     game.playerTurn = false;
                     updateDisplay();
                     statusEl.textContent = "AI is thinking...";
@@ -566,9 +619,11 @@
             }
         }
 
+        // Handles player drawing from boneyard
         function drawTile() {
             if (!game.playerTurn || game.gameOver) return;
 
+            // Don't allow draw if player has playable tiles
             if (game.getPlayableDominoes(game.playerHand).length > 0) {
                 statusEl.textContent = "You have playable tiles! Select one.";
                 return;
@@ -580,6 +635,7 @@
                 statusEl.textContent = `Drew ${domino}`;
                 updateDisplay();
 
+                // If still no playable tiles and boneyard empty, pass turn
                 if (game.getPlayableDominoes(game.playerHand).length === 0) {
                     if (game.boneyard.length === 0) {
                         statusEl.textContent = "No playable tiles - passing turn";
@@ -592,6 +648,7 @@
                     }
                 }
             } else {
+                // Boneyard empty, must pass
                 statusEl.textContent = "Boneyard empty - passing turn";
                 game.playerTurn = false;
                 if (game.checkGameOver()) {
@@ -602,6 +659,7 @@
             }
         }
 
+        // Executes AI's turn
         function aiTurn() {
             if (game.gameOver) return;
 
@@ -611,17 +669,20 @@
             const move = ai.chooseMove();
 
             if (move) {
+                // AI has a playable tile
                 game.playDomino(move.domino, move.side);
                 const idx = game.aiHand.findIndex(d => d.equals(move.domino));
                 if (idx !== -1) game.aiHand.splice(idx, 1);
                 statusEl.textContent = `AI played ${move.domino} on ${move.side}`;
             } else {
+                // AI must draw until playable tile or boneyard empty
                 let drewPlayable = false;
                 while (game.boneyard.length > 0) {
                     const domino = game.drawFromBoneyard();
                     game.aiHand.push(domino);
                     const placements = game.canPlay(domino);
                     if (placements.length > 0) {
+                        // Found playable tile, play it immediately
                         game.playDomino(domino, placements[0]);
                         const idx = game.aiHand.findIndex(d => d.equals(domino));
                         if (idx !== -1) game.aiHand.splice(idx, 1);
@@ -635,6 +696,7 @@
                 }
             }
 
+            // Check for game over, otherwise pass to player
             if (game.checkGameOver()) {
                 endGame();
             } else {
@@ -644,9 +706,11 @@
                 if (playable.length > 0) {
                     statusEl.textContent = "Your turn - Select a domino";
                 } else {
+                    // Player has no playable tiles
                     if (game.boneyard.length > 0) {
                         statusEl.textContent = "No playable tiles - Draw from boneyard";
                     } else {
+                        // Player must pass, continue with AI
                         statusEl.textContent = "No playable tiles and boneyard empty - passing";
                         game.playerTurn = false;
                         setTimeout(() => {
@@ -661,14 +725,15 @@
             }
         }
 
+        // Updates all visual elements to match game state
         function updateDisplay() {
-            // AI hand
+            // Render AI hand (hidden tiles)
             aiHandEl.innerHTML = '';
             game.aiHand.forEach(d => {
                 aiHandEl.appendChild(createDominoElement(d, { hidden: true }));
             });
 
-            // Board
+            // Render board
             boardEl.innerHTML = '';
             if (game.board.length > 0) {
                 boardInfoEl.textContent = `Left end: ${game.leftEnd}  |  Right end: ${game.rightEnd}`;
@@ -679,7 +744,7 @@
                 boardInfoEl.textContent = "Board is empty - Play first domino";
             }
 
-            // Player hand
+            // Render player hand (clickable during their turn)
             playerHandEl.innerHTML = '';
             game.playerHand.forEach(d => {
                 const isSelected = selectedDomino && d.equals(selectedDomino);
@@ -689,13 +754,14 @@
                 }));
             });
 
-            // Boneyard info
+            // Update boneyard counter
             boneyardInfoEl.textContent = `Boneyard: ${game.boneyard.length} tiles remaining`;
 
-            // Buttons
+            // Enable/disable draw button
             btnDraw.disabled = !game.playerTurn;
         }
 
+        // Displays game over screen with results
         function endGame() {
             updateDisplay();
 
@@ -714,6 +780,7 @@
             winnerOverlay.classList.remove('hidden-overlay');
         }
 
+        // Resets game to initial state
         function newGame() {
             game = new DominoGame();
             ai = new DominoAI(game);
@@ -731,7 +798,9 @@
             }
         }
 
-        // Initialize
+        // ============================================
+        // INITIALIZATION
+        // ============================================
         updateDisplay();
         if (!game.playerTurn) {
             statusEl.textContent = "AI goes first...";
