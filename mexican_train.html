@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mexican Train Domino - Neon Night Edition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            color: #00ff9d;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Grid background pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 157, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 157, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .game-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            z-index: 1;
+        }
+
+        /* Header */
+        .game-header {
+            padding: 15px 20px;
+            background: rgba(26, 26, 46, 0.9);
+            border-bottom: 2px solid #00ff9d;
+            box-shadow: 0 0 20px rgba(0, 255, 157, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .game-title {
+            font-size: 1.8em;
+            font-weight: bold;
+            text-shadow: 0 0 10px #00ff9d, 0 0 20px #00ff9d;
+            letter-spacing: 2px;
+        }
+
+        .game-info {
+            display: flex;
+            gap: 25px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .info-item {
+            font-size: 0.95em;
+            color: #00ffff;
+            text-shadow: 0 0 5px #00ffff;
+        }
+
+        .info-label {
+            color: #888;
+            margin-right: 5px;
+        }
+
+        /* Trains area (top 60%) */
+        .trains-area {
+            flex: 6;
+            padding: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .train-lane {
+            flex: 1;
+            background: rgba(20, 20, 35, 0.6);
+            border: 1px solid rgba(0, 255, 157, 0.2);
+            border-radius: 0;
+            padding: 10px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .train-lane.playable {
+            border-color: #00ff9d;
+            box-shadow: 0 0 20px rgba(0, 255, 157, 0.4);
+            background: rgba(0, 255, 157, 0.05);
+        }
+
+        .train-lane.mexican-train {
+            border-color: #ff00ff;
+        }
+
+        .train-lane.mexican-train.playable {
+            border-color: #ff00ff;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+            background: rgba(255, 0, 255, 0.05);
+        }
+
+        .train-lane.drop-target {
+            background: rgba(0, 255, 157, 0.15);
+            border-color: #00ff9d;
+            box-shadow: 0 0 30px rgba(0, 255, 157, 0.6);
+        }
+
+        .train-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .train-name {
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #00ffff;
+            text-shadow: none;
+        }
+
+        .mexican-train .train-name {
+            color: #ff00ff;
+            text-shadow: none;
+        }
+
+        .train-status {
+            font-size: 0.75em;
+            color: #888;
+        }
+
+        .train-public {
+            color: #ff00ff;
+            text-shadow: 0 0 5px #ff00ff;
+        }
+
+        .train-tiles {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            height: calc(100% - 35px);
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 5px 0;
+            justify-content: flex-start;
+        }
+
+        .train-tiles::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .train-tiles::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .train-tiles::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 157, 0.5);
+            border-radius: 2px;
+        }
+
+        /* Domino tile - BASE STYLES */
+        .domino {
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            display: flex;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
+        }
+
+        .domino:hover {
+            transform: translateY(-3px);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8), 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .domino.selected {
+            border-color: #ffff00;
+            box-shadow: 0 0 15px rgba(255, 255, 0, 0.8);
+            transform: translateY(-5px);
+        }
+
+        .domino.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .domino.help-highlight {
+            animation: helpPulse 1s ease-in-out 5;
+            border-color: #00ff9d;
+        }
+
+        @keyframes helpPulse {
+            0%, 100% {
+                box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 15px rgba(0, 255, 157, 0.8);
+                border-color: #00ff9d;
+            }
+            50% {
+                box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 25px rgba(0, 255, 157, 1);
+                border-color: #00ff9d;
+            }
+        }
+
+        /* HORIZONTAL dominoes for train lanes */
+        .domino.horizontal {
+            flex-direction: row;
+            width: 60px;
+            height: 35px;
+            min-width: 60px;
+        }
+
+        /* VERTICAL dominoes for player hand */
+        .domino.vertical {
+            flex-direction: column;
+            width: 50px;
+            height: 100px;
+            min-width: 50px;
+        }
+
+        .domino-half {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        /* Smaller font for horizontal dominoes */
+        .domino.horizontal .domino-half {
+            font-size: 1.1em;
+        }
+
+        /* Neon colors for each number */
+        .domino-half[data-value="0"] { color: #00ffff; text-shadow: 0 0 8px #00ffff; }
+        .domino-half[data-value="1"] { color: #00ff9d; text-shadow: 0 0 8px #00ff9d; }
+        .domino-half[data-value="2"] { color: #ff00ff; text-shadow: 0 0 8px #ff00ff; }
+        .domino-half[data-value="3"] { color: #ffff00; text-shadow: 0 0 8px #ffff00; }
+        .domino-half[data-value="4"] { color: #ff6600; text-shadow: 0 0 8px #ff6600; }
+        .domino-half[data-value="5"] { color: #00ccff; text-shadow: 0 0 8px #00ccff; }
+        .domino-half[data-value="6"] { color: #ff0066; text-shadow: 0 0 8px #ff0066; }
+        .domino-half[data-value="7"] { color: #66ff00; text-shadow: 0 0 8px #66ff00; }
+        .domino-half[data-value="8"] { color: #9900ff; text-shadow: 0 0 8px #9900ff; }
+        .domino-half[data-value="9"] { color: #ff3300; text-shadow: 0 0 8px #ff3300; }
+        .domino-half[data-value="10"] { color: #00ff66; text-shadow: 0 0 8px #00ff66; }
+        .domino-half[data-value="11"] { color: #ff9900; text-shadow: 0 0 8px #ff9900; }
+        .domino-half[data-value="12"] { color: #cc00ff; text-shadow: 0 0 8px #cc00ff; }
+
+        .domino-divider {
+            background: linear-gradient(to bottom, transparent, #00ff9d, transparent);
+            box-shadow: 0 0 3px #00ff9d;
+        }
+
+        /* Horizontal divider */
+        .domino.horizontal .domino-divider {
+            width: 1px;
+            height: 100%;
+            background: linear-gradient(to bottom, transparent, #00ff9d, transparent);
+        }
+
+        /* Vertical divider */
+        .domino.vertical .domino-divider {
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(to right, transparent, #00ff9d, transparent);
+        }
+
+        .engine-marker {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ff00ff 0%, #8b00ff 100%);
+            box-shadow: 0 0 15px #ff00ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+            font-weight: bold;
+            color: white;
+            z-index: 10;
+        }
+
+        /* Player hand area (bottom 40%) */
+        .player-area {
+            flex: 4;
+            background: rgba(15, 15, 30, 0.9);
+            border-top: 2px solid #00ffff;
+            box-shadow: 0 -5px 20px rgba(0, 255, 255, 0.3);
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .player-header {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .player-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #00ffff;
+            text-shadow: 0 0 8px #00ffff;
+        }
+
+        .btn-help {
+            padding: 5px 12px;
+            background: rgba(255, 255, 0, 0.1);
+            border: 1px solid rgba(255, 255, 0, 0.5);
+            border-radius: 5px;
+            color: #ffff00;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.85em;
+        }
+
+        .btn-help:hover {
+            background: rgba(255, 255, 0, 0.2);
+            box-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
+        }
+
+        .player-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #00ff9d 0%, #00cc7a 100%);
+            border: none;
+            border-radius: 5px;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 10px rgba(0, 255, 157, 0.5);
+            font-size: 0.9em;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(0, 255, 157, 0.8);
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #ff00ff 0%, #cc00cc 100%);
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.8);
+        }
+
+        .btn-draw-highlight {
+            animation: drawGlow 1s ease-in-out 5;
+        }
+
+        @keyframes drawGlow {
+            0%, 100% {
+                box-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 25px rgba(255, 255, 0, 1);
+            }
+        }
+
+        .player-hand {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            align-items: center;
+            min-height: 100px;
+            margin-bottom: 15px;
+        }
+
+        .player-hand .domino {
+            cursor: grab;
+        }
+
+        .player-hand .domino:active {
+            cursor: grabbing;
+        }
+
+        /* Overlay screens */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .overlay.hidden {
+            display: none;
+        }
+
+        .modal {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border: 2px solid #00ff9d;
+            border-radius: 15px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 0 40px rgba(0, 255, 157, 0.5);
+            text-align: center;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #00ff9d;
+            text-shadow: 0 0 15px #00ff9d;
+        }
+
+        .modal h3 {
+            font-size: 1.3em;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: #00ffff;
+            text-align: left;
+        }
+
+        .modal p {
+            margin: 15px 0;
+            font-size: 1.1em;
+            color: #00ffff;
+        }
+
+        .modal ul {
+            text-align: left;
+            margin: 10px 0 10px 20px;
+            color: #00ffff;
+            line-height: 1.6;
+        }
+
+        .modal li {
+            margin: 8px 0;
+        }
+
+        .difficulty-select {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 25px 0;
+        }
+
+        .difficulty-btn {
+            padding: 15px 25px;
+            font-size: 1.1em;
+            background: rgba(0, 255, 157, 0.1);
+            border: 2px solid #00ff9d;
+            color: #00ff9d;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .difficulty-btn:hover {
+            background: rgba(0, 255, 157, 0.3);
+            box-shadow: 0 0 20px rgba(0, 255, 157, 0.6);
+            transform: scale(1.05);
+        }
+
+        .difficulty-btn.selected {
+            background: #00ff9d;
+            color: #000;
+            box-shadow: 0 0 25px rgba(0, 255, 157, 0.8);
+        }
+
+        .leaderboard {
+            margin: 25px 0;
+            text-align: left;
+        }
+
+        .leaderboard-entry {
+            padding: 10px;
+            margin: 8px 0;
+            background: rgba(0, 255, 157, 0.05);
+            border-left: 3px solid #00ff9d;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            color: #00ffff;
+        }
+
+        .status-message {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #00ff9d;
+            border-radius: 8px;
+            padding: 15px 30px;
+            color: #00ff9d;
+            font-size: 1.1em;
+            box-shadow: 0 0 20px rgba(0, 255, 157, 0.5);
+            z-index: 999;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateX(-50%) translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .scores-table {
+            width: 100%;
+            margin: 20px 0;
+            border-collapse: collapse;
+        }
+
+        .scores-table th,
+        .scores-table td {
+            padding: 10px;
+            border: 1px solid rgba(0, 255, 157, 0.3);
+            text-align: center;
+        }
+
+        .scores-table th {
+            background: rgba(0, 255, 157, 0.2);
+            color: #00ff9d;
+        }
+
+        .scores-table td {
+            color: #00ffff;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .game-title {
+                font-size: 1.3em;
+            }
+
+            .game-info {
+                font-size: 0.85em;
+            }
+
+            .trains-area {
+                padding: 10px;
+                gap: 0;
+            }
+
+            .domino.horizontal {
+                width: 50px;
+                height: 30px;
+                min-width: 50px;
+            }
+
+            .domino.vertical {
+                width: 40px;
+                height: 80px;
+                min-width: 40px;
+            }
+
+            .modal {
+                padding: 25px;
+            }
+
+            .difficulty-select {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- Header -->
+        <div class="game-header">
+            <div class="game-title">🚂 MEXICAN TRAIN</div>
+            <div class="game-info">
+                <div class="info-item">
+                    <span class="info-label">Round:</span>
+                    <span id="round-num">1/13</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Engine:</span>
+                    <span id="engine-num">[12|12]</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Boneyard:</span>
+                    <span id="boneyard-count">0</span>
+                </div>
+                <button class="btn" onclick="showRules()">📋 Rules</button>
+                <button class="btn btn-secondary" onclick="showLeaderboard()">📊 Scores</button>
+                <button class="btn" onclick="newGame()">🔄 New Game</button>
+            </div>
+        </div>
+
+        <!-- Trains Area (60%) -->
+        <div class="trains-area">
+            <!-- Mexican Train (Public) -->
+            <div class="train-lane mexican-train" id="train-mexican" data-train="mexican">
+                <div class="train-header">
+                    <div class="train-name">🚂 MEXICAN TRAIN (Public)</div>
+                    <div class="train-status train-public">Always Playable</div>
+                </div>
+                <div class="train-tiles" id="tiles-mexican"></div>
+            </div>
+
+            <!-- AI Player Trains -->
+            <div class="train-lane" id="train-1" data-train="1">
+                <div class="train-header">
+                    <div class="train-name">🤖 JAX</div>
+                    <div class="train-status" id="status-1">Private</div>
+                </div>
+                <div class="train-tiles" id="tiles-1"></div>
+            </div>
+
+            <div class="train-lane" id="train-2" data-train="2">
+                <div class="train-header">
+                    <div class="train-name">🤖 KIRA</div>
+                    <div class="train-status" id="status-2">Private</div>
+                </div>
+                <div class="train-tiles" id="tiles-2"></div>
+            </div>
+
+            <div class="train-lane" id="train-3" data-train="3">
+                <div class="train-header">
+                    <div class="train-name">🤖 ZANE</div>
+                    <div class="train-status" id="status-3">Private</div>
+                </div>
+                <div class="train-tiles" id="tiles-3"></div>
+            </div>
+
+            <!-- Player Train -->
+            <div class="train-lane" id="train-0" data-train="0">
+                <div class="train-header">
+                    <div class="train-name">👤 YOU</div>
+                    <div class="train-status" id="status-0">Private</div>
+                </div>
+                <div class="train-tiles" id="tiles-0"></div>
+            </div>
+        </div>
+
+        <!-- Player Hand Area (40%) -->
+        <div class="player-area">
+            <div class="player-header">
+                <div class="player-name">YOUR HAND (<span id="hand-count">0</span> tiles)</div>
+                <button class="btn-help" onclick="showHelp()">💡 Help</button>
+            </div>
+            <div class="player-hand" id="player-hand"></div>
+            <div class="player-actions">
+                <button class="btn" id="btn-draw" onclick="drawTile()">Draw Tile</button>
+                <button class="btn btn-secondary" id="btn-pass" onclick="passTurn()" disabled>Pass Turn</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Welcome/Setup Overlay -->
+    <div class="overlay" id="welcome-overlay">
+        <div class="modal">
+            <h2>🚂 MEXICAN TRAIN 🚂</h2>
+            <p>Select AI Difficulty:</p>
+            <div class="difficulty-select">
+                <button class="difficulty-btn selected" data-difficulty="easy">Easy</button>
+                <button class="difficulty-btn" data-difficulty="medium">Medium</button>
+                <button class="difficulty-btn" data-difficulty="hard">Hard</button>
+            </div>
+            <button class="btn" onclick="startGame()" style="margin-top: 20px; font-size: 1.2em; padding: 12px 30px;">
+                Start Game
+            </button>
+        </div>
+    </div>
+
+    <!-- Rules Overlay -->
+    <div class="overlay hidden" id="rules-overlay">
+        <div class="modal">
+            <h2>📋 GAME RULES 📋</h2>
+            
+            <h3>🎯 Objective</h3>
+            <p>Be the player with the <strong>lowest score</strong> after 13 rounds.</p>
+            
+            <h3>🎮 How to Play</h3>
+            <ul>
+                <li><strong>Match numbers:</strong> Place dominoes so one end matches the open end of a train</li>
+                <li><strong>Your turn:</strong> Play one domino on any available train, or draw if you can't play</li>
+                <li><strong>Drag & drop:</strong> Drag dominoes from your hand to highlighted trains</li>
+            </ul>
+            
+            <h3>🚂 Train Types</h3>
+            <ul>
+                <li><strong>Your Train:</strong> Private (only you can play) unless you pass a turn</li>
+                <li><strong>Mexican Train:</strong> Public train, always playable by everyone</li>
+                <li><strong>Opponent Trains:</strong> Private, become public when they pass</li>
+            </ul>
+            
+            <h3>🎲 Special Rules</h3>
+            <ul>
+                <li><strong>Doubles:</strong> Must be covered with another tile in the same turn</li>
+                <li><strong>Drawing:</strong> If you can't play, draw one tile. If still can't play, pass (your train becomes public)</li>
+                <li><strong>Engine:</strong> Each round starts with a different double (12-12 down to 0-0)</li>
+            </ul>
+            
+            <h3>📊 Scoring</h3>
+            <ul>
+                <li>Each pip (dot) = <strong>1 point</strong></li>
+                <li>Double-blank [0|0] = <strong>50 points</strong></li>
+                <li>Score is the sum of tiles remaining in your hand when round ends</li>
+            </ul>
+            
+            <h3>🏆 Winning</h3>
+            <p>After 13 rounds (engines 12 down to 0), the player with the <strong>lowest total score wins</strong>!</p>
+            
+            <button class="btn" onclick="hideRules()" style="margin-top: 20px;">
+                Got it!
+            </button>
+        </div>
+    </div>
+
+    <!-- Round End Overlay -->
+    <div class="overlay hidden" id="round-end-overlay">
+        <div class="modal">
+            <h2 id="round-end-title">Round Complete!</h2>
+            <table class="scores-table" id="round-scores"></table>
+            <button class="btn" onclick="nextRound()" style="margin-top: 20px; font-size: 1.1em; padding: 10px 25px;">
+                Next Round
+            </button>
+        </div>
+    </div>
+
+    <!-- Game End Overlay -->
+    <div class="overlay hidden" id="game-end-overlay">
+        <div class="modal">
+            <h2>🏆 Game Complete! 🏆</h2>
+            <table class="scores-table" id="final-scores"></table>
+            <button class="btn" onclick="newGame()" style="margin-top: 20px; font-size: 1.1em; padding: 10px 25px;">
+                New Game
+            </button>
+            <button class="btn btn-secondary" onclick="showLeaderboard()" style="margin-top: 10px; font-size: 1.1em; padding: 10px 25px;">
+                View Leaderboard
+            </button>
+        </div>
+    </div>
+
+    <!-- Leaderboard Overlay -->
+    <div class="overlay hidden" id="leaderboard-overlay">
+        <div class="modal">
+            <h2>📊 LEADERBOARD 📊</h2>
+            <div class="leaderboard" id="leaderboard-content"></div>
+            <button class="btn" onclick="hideLeaderboard()" style="margin-top: 20px;">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // DOMINO CLASS
+        // ============================================
+        class Domino {
+            constructor(left, right) {
+                this.left = left;
+                this.right = right;
+            }
+
+            flip() {
+                return new Domino(this.right, this.left);
+            }
+
+            total() {
+                return this.left + this.right;
+            }
+
+            isDouble() {
+                return this.left === this.right;
+            }
+
+            equals(other) {
+                return (this.left === other.left && this.right === other.right) ||
+                       (this.left === other.right && this.right === other.left);
+            }
+
+            toString() {
+                return `[${this.left}|${this.right}]`;
+            }
+
+            getScore() {
+                if (this.left === 0 && this.right === 0) return 50;
+                return this.total();
+            }
+        }
+
+        // ============================================
+        // MEXICAN TRAIN GAME CLASS
+        // ============================================
+        class MexicanTrainGame {
+            constructor(difficulty = 'medium') {
+                this.difficulty = difficulty;
+                this.roundEngines = [12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+                this.currentRound = 0;
+                this.players = ['You', 'Jax', 'Kira', 'Zane'];
+                this.totalScores = [0, 0, 0, 0];
+                this.reset();
+            }
+
+            reset() {
+                this.engine = this.roundEngines[this.currentRound];
+                this.boneyard = this.createDominoSet();
+                this.hands = [[], [], [], []];
+                this.trains = {
+                    mexican: [],
+                    0: [],
+                    1: [],
+                    2: [],
+                    3: []
+                };
+                this.publicTrains = new Set(['mexican']);
+                this.currentPlayer = 0;
+                this.roundOver = false;
+                this.mustCoverDouble = null;
+                this.hasDrawn = false;
+                this.dealDominoes();
+            }
+
+            createDominoSet() {
+                const dominoes = [];
+                for (let i = 0; i <= 12; i++) {
+                    for (let j = i; j <= 12; j++) {
+                        dominoes.push(new Domino(i, j));
+                    }
+                }
+                return this.shuffle(dominoes);
+            }
+
+            shuffle(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+
+            dealDominoes() {
+                const tilesPerPlayer = 15;
+                for (let i = 0; i < 4; i++) {
+                    this.hands[i] = this.boneyard.splice(0, tilesPerPlayer);
+                }
+            }
+
+            getPlayableTrains(playerIndex) {
+                const playable = [];
+                playable.push('mexican');
+                playable.push(playerIndex);
+                
+                for (let train of this.publicTrains) {
+                    if (train !== 'mexican' && train !== playerIndex) {
+                        playable.push(train);
+                    }
+                }
+                
+                return playable;
+            }
+
+            getTrainEnd(train) {
+                const trainKey = train === 'mexican' ? 'mexican' : parseInt(train);
+                const tiles = this.trains[trainKey];
+                
+                if (tiles.length === 0) {
+                    return this.engine;
+                }
+                
+                return tiles[tiles.length - 1].right;
+            }
+
+            canPlayDomino(domino, train) {
+                const end = this.getTrainEnd(train);
+                return domino.left === end || domino.right === end;
+            }
+
+            playDomino(domino, train, playerIndex) {
+                const trainKey = train === 'mexican' ? 'mexican' : parseInt(train);
+                const end = this.getTrainEnd(train);
+                
+                let orientedDomino = domino;
+                if (domino.left === end) {
+                    orientedDomino = domino;
+                } else if (domino.right === end) {
+                    orientedDomino = domino.flip();
+                } else {
+                    console.error('Domino cannot be played on this train!');
+                    return false;
+                }
+                
+                this.trains[trainKey].push(orientedDomino);
+                
+                const handIndex = this.hands[playerIndex].findIndex(d => d.equals(domino));
+                if (handIndex !== -1) {
+                    this.hands[playerIndex].splice(handIndex, 1);
+                }
+                
+                if (orientedDomino.isDouble()) {
+                    this.mustCoverDouble = trainKey;
+                } else if (this.mustCoverDouble === trainKey) {
+                    this.mustCoverDouble = null;
+                }
+                
+                if (trainKey === playerIndex && this.publicTrains.has(playerIndex)) {
+                    this.publicTrains.delete(playerIndex);
+                }
+                
+                return true;
+            }
+
+            drawFromBoneyard(playerIndex) {
+                if (this.boneyard.length > 0) {
+                    const domino = this.boneyard.pop();
+                    this.hands[playerIndex].push(domino);
+                    return domino;
+                }
+                return null;
+            }
+
+            makeTrainPublic(trainIndex) {
+                this.publicTrains.add(trainIndex);
+            }
+
+            checkRoundOver() {
+                for (let i = 0; i < 4; i++) {
+                    if (this.hands[i].length === 0) {
+                        this.roundOver = true;
+                        return true;
+                    }
+                }
+                
+                if (this.boneyard.length === 0) {
+                    let anyoneCanPlay = false;
+                    for (let i = 0; i < 4; i++) {
+                        const playableTrains = this.getPlayableTrains(i);
+                        for (let domino of this.hands[i]) {
+                            for (let train of playableTrains) {
+                                if (this.canPlayDomino(domino, train)) {
+                                    anyoneCanPlay = true;
+                                    break;
+                                }
+                            }
+                            if (anyoneCanPlay) break;
+                        }
+                        if (anyoneCanPlay) break;
+                    }
+                    
+                    if (!anyoneCanPlay) {
+                        this.roundOver = true;
+                        return true;
+                    }
+                }
+                
+                return false;
+            }
+
+            getRoundScores() {
+                return this.hands.map(hand => 
+                    hand.reduce((sum, domino) => sum + domino.getScore(), 0)
+                );
+            }
+
+            nextRound() {
+                this.currentRound++;
+                if (this.currentRound < this.roundEngines.length) {
+                    this.reset();
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        // ============================================
+        // AI PLAYER CLASS
+        // ============================================
+        class AIPlayer {
+            constructor(game, playerIndex, difficulty) {
+                this.game = game;
+                this.playerIndex = playerIndex;
+                this.difficulty = difficulty;
+            }
+
+            chooseMove() {
+                const hand = this.game.hands[this.playerIndex];
+                const playableTrains = this.game.getPlayableTrains(this.playerIndex);
+                
+                let moves = [];
+                
+                for (let domino of hand) {
+                    for (let train of playableTrains) {
+                        if (this.game.canPlayDomino(domino, train)) {
+                            const score = this.evaluateMove(domino, train);
+                            moves.push({ domino, train, score });
+                        }
+                    }
+                }
+                
+                if (moves.length === 0) return null;
+                
+                moves.sort((a, b) => b.score - a.score);
+                
+                if (this.difficulty === 'easy') {
+                    return moves[Math.floor(Math.random() * moves.length)];
+                }
+                
+                if (this.difficulty === 'medium') {
+                    const topMoves = moves.slice(0, Math.min(3, moves.length));
+                    return topMoves[Math.floor(Math.random() * topMoves.length)];
+                }
+                
+                return moves[0];
+            }
+
+            evaluateMove(domino, train) {
+                let score = 0;
+                score += domino.total();
+                if (domino.isDouble()) score += 20;
+                if (train === this.playerIndex) score += 15;
+                if (train === 'mexican') score += 10;
+                if (domino.left === 0 && domino.right === 0) score += 50;
+                return score;
+            }
+        }
+
+        // ============================================
+        // GAME STATE
+        // ============================================
+        let game;
+        let aiPlayers = [];
+        let selectedDomino = null;
+        let selectedDifficulty = 'medium';
+        let draggedDomino = null;
+        let draggedElement = null;
+        let helpTimeout = null;
+
+        function getLeaderboard() {
+            const saved = localStorage.getItem('mexicanTrainLeaderboard');
+            return saved ? JSON.parse(saved) : [];
+        }
+
+        function saveToLeaderboard(totalScore, rounds) {
+            const leaderboard = getLeaderboard();
+            leaderboard.push({
+                date: new Date().toLocaleString(),
+                score: totalScore,
+                rounds: rounds,
+                difficulty: selectedDifficulty
+            });
+            leaderboard.sort((a, b) => a.score - b.score);
+            localStorage.setItem('mexicanTrainLeaderboard', JSON.stringify(leaderboard.slice(0, 10)));
+        }
+
+        // ============================================
+        // UI FUNCTIONS
+        // ============================================
+        function createDominoElement(domino, options = {}) {
+            const { clickable = false, selected = false, draggable = false, orientation = 'vertical' } = options;
+            
+            const el = document.createElement('div');
+            el.className = `domino ${orientation}`;
+            if (selected) el.classList.add('selected');
+            
+            const leftHalf = document.createElement('div');
+            leftHalf.className = 'domino-half';
+            leftHalf.setAttribute('data-value', domino.left);
+            leftHalf.textContent = domino.left;
+            
+            const divider = document.createElement('div');
+            divider.className = 'domino-divider';
+            
+            const rightHalf = document.createElement('div');
+            rightHalf.className = 'domino-half';
+            rightHalf.setAttribute('data-value', domino.right);
+            rightHalf.textContent = domino.right;
+            
+            el.appendChild(leftHalf);
+            el.appendChild(divider);
+            el.appendChild(rightHalf);
+            
+            if (clickable) {
+                el.style.cursor = 'pointer';
+                el.addEventListener('click', () => selectDomino(domino));
+            }
+
+            if (draggable) {
+                el.draggable = true;
+                el.addEventListener('dragstart', (e) => {
+                    draggedDomino = domino;
+                    draggedElement = el;
+                    el.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+                el.addEventListener('dragend', () => {
+                    el.classList.remove('dragging');
+                    draggedDomino = null;
+                    draggedElement = null;
+                    document.querySelectorAll('.train-lane').forEach(lane => {
+                        lane.classList.remove('drop-target');
+                    });
+                });
+            }
+            
+            return el;
+        }
+
+        function updateDisplay() {
+            document.getElementById('round-num').textContent = `${game.currentRound + 1}/13`;
+            document.getElementById('engine-num').textContent = `[${game.engine}|${game.engine}]`;
+            document.getElementById('boneyard-count').textContent = game.boneyard.length;
+            
+            updateTrain('mexican', game.trains.mexican);
+            for (let i = 0; i < 4; i++) {
+                updateTrain(i, game.trains[i]);
+                updateTrainStatus(i);
+            }
+            
+            updatePlayerHand();
+            highlightPlayableTrains();
+        }
+
+        function updateTrain(trainKey, tiles) {
+            const tilesContainer = document.getElementById(`tiles-${trainKey}`);
+            tilesContainer.innerHTML = '';
+            
+            if (tiles.length === 0) {
+                const engineMarker = document.createElement('div');
+                engineMarker.className = 'engine-marker';
+                engineMarker.textContent = game.engine;
+                tilesContainer.appendChild(engineMarker);
+            } else {
+                const visibleTiles = tiles.slice(-8);
+                visibleTiles.forEach(domino => {
+                    tilesContainer.appendChild(createDominoElement(domino, { orientation: 'horizontal' }));
+                });
+            }
+        }
+
+        function updateTrainStatus(trainIndex) {
+            const statusEl = document.getElementById(`status-${trainIndex}`);
+            if (game.publicTrains.has(trainIndex)) {
+                statusEl.textContent = '🔓 Public';
+                statusEl.classList.add('train-public');
+            } else {
+                statusEl.textContent = '🔒 Private';
+                statusEl.classList.remove('train-public');
+            }
+        }
+
+        function updatePlayerHand() {
+            const handEl = document.getElementById('player-hand');
+            const hand = game.hands[0];
+            
+            handEl.innerHTML = '';
+            document.getElementById('hand-count').textContent = hand.length;
+            
+            hand.forEach(domino => {
+                const isSelected = selectedDomino && domino.equals(selectedDomino);
+                const el = createDominoElement(domino, {
+                    clickable: game.currentPlayer === 0 && !game.roundOver,
+                    selected: isSelected,
+                    draggable: game.currentPlayer === 0 && !game.roundOver,
+                    orientation: 'vertical'
+                });
+                handEl.appendChild(el);
+            });
+        }
+
+        function highlightPlayableTrains() {
+            document.querySelectorAll('.train-lane').forEach(lane => {
+                lane.classList.remove('playable');
+                lane.style.cursor = 'default';
+                lane.onclick = null;
+                
+                lane.ondragover = null;
+                lane.ondragenter = null;
+                lane.ondragleave = null;
+                lane.ondrop = null;
+            });
+            
+            if (game.currentPlayer !== 0 || game.roundOver) return;
+            
+            const playableTrains = game.getPlayableTrains(0);
+            playableTrains.forEach(train => {
+                const trainEl = document.getElementById(`train-${train}`);
+                if (trainEl) {
+                    trainEl.classList.add('playable');
+                    
+                    trainEl.ondragover = (e) => {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = 'move';
+                    };
+                    
+                    trainEl.ondragenter = (e) => {
+                        e.preventDefault();
+                        if (draggedDomino && game.canPlayDomino(draggedDomino, train)) {
+                            trainEl.classList.add('drop-target');
+                        }
+                    };
+                    
+                    trainEl.ondragleave = () => {
+                        trainEl.classList.remove('drop-target');
+                    };
+                    
+                    trainEl.ondrop = (e) => {
+                        e.preventDefault();
+                        trainEl.classList.remove('drop-target');
+                        if (draggedDomino && game.canPlayDomino(draggedDomino, train)) {
+                            playDomino(draggedDomino, train);
+                        }
+                    };
+                }
+            });
+        }
+
+        function showHelp() {
+            if (game.currentPlayer !== 0 || game.roundOver) return;
+            
+            // Clear existing help highlights
+            clearHelpHighlights();
+            
+            const hand = game.hands[0];
+            const playableTrains = game.getPlayableTrains(0);
+            const playableEnds = playableTrains.map(train => game.getTrainEnd(train));
+            
+            let hasPlayableTiles = false;
+            const handElements = document.querySelectorAll('.player-hand .domino');
+            
+            handElements.forEach((el, index) => {
+                const domino = hand[index];
+                const isPlayable = playableEnds.some(end => 
+                    domino.left === end || domino.right === end
+                );
+                
+                if (isPlayable) {
+                    el.classList.add('help-highlight');
+                    hasPlayableTiles = true;
+                }
+            });
+            
+            if (hasPlayableTiles) {
+                showMessage('✅ These tiles can be played on highlighted trains!');
+            } else {
+                showMessage('❌ No playable dominoes this turn. Draw a tile!');
+                document.getElementById('btn-draw').classList.add('btn-draw-highlight');
+            }
+            
+            // Clear highlights after 5 seconds
+            helpTimeout = setTimeout(clearHelpHighlights, 5000);
+        }
+
+        function clearHelpHighlights() {
+            if (helpTimeout) {
+                clearTimeout(helpTimeout);
+                helpTimeout = null;
+            }
+            document.querySelectorAll('.help-highlight').forEach(el => {
+                el.classList.remove('help-highlight');
+            });
+            document.getElementById('btn-draw').classList.remove('btn-draw-highlight');
+        }
+
+        function selectDomino(domino) {
+            if (game.currentPlayer !== 0 || game.roundOver) return;
+            
+            clearHelpHighlights();
+            selectedDomino = domino;
+            updateDisplay();
+            
+            const playableTrains = game.getPlayableTrains(0);
+            let canPlayAnywhere = false;
+            
+            for (let train of playableTrains) {
+                if (game.canPlayDomino(domino, train)) {
+                    canPlayAnywhere = true;
+                    break;
+                }
+            }
+            
+            if (canPlayAnywhere) {
+                showMessage(`Selected ${domino} - Click a highlighted train to play`);
+                enableTrainClick();
+            } else {
+                showMessage(`Selected ${domino} - Cannot play this tile!`);
+            }
+        }
+
+        function enableTrainClick() {
+            const playableTrains = game.getPlayableTrains(0);
+            
+            playableTrains.forEach(train => {
+                const trainEl = document.getElementById(`train-${train}`);
+                if (trainEl && selectedDomino && game.canPlayDomino(selectedDomino, train)) {
+                    trainEl.style.cursor = 'pointer';
+                    trainEl.onclick = () => playDomino(selectedDomino, train);
+                }
+            });
+        }
+
+        function playDomino(domino, train) {
+            if (!domino || game.currentPlayer !== 0) return;
+            
+            clearHelpHighlights();
+            
+            if (game.playDomino(domino, train, 0)) {
+                showMessage(`Played ${domino} on ${train === 'mexican' ? 'Mexican Train' : 'your train'}`);
+                selectedDomino = null;
+                game.hasDrawn = false;
+                
+                document.querySelectorAll('.train-lane').forEach(lane => {
+                    lane.style.cursor = 'default';
+                    lane.onclick = null;
+                });
+                
+                if (game.checkRoundOver()) {
+                    endRound();
+                } else {
+                    nextPlayer();
+                }
+            }
+        }
+
+        function drawTile() {
+            if (game.currentPlayer !== 0 || game.roundOver || game.hasDrawn) return;
+            
+            clearHelpHighlights();
+            
+            const domino = game.drawFromBoneyard(0);
+            if (domino) {
+                game.hasDrawn = true;
+                showMessage(`Drew ${domino}`);
+                updateDisplay();
+                
+                const playableTrains = game.getPlayableTrains(0);
+                let canPlay = false;
+                for (let train of playableTrains) {
+                    if (game.canPlayDomino(domino, train)) {
+                        canPlay = true;
+                        break;
+                    }
+                }
+                
+                if (!canPlay) {
+                    document.getElementById('btn-pass').disabled = false;
+                }
+            } else {
+                showMessage('Boneyard is empty!');
+                document.getElementById('btn-pass').disabled = false;
+            }
+        }
+
+        function passTurn() {
+            if (game.currentPlayer !== 0 || !game.hasDrawn) return;
+            
+            clearHelpHighlights();
+            game.makeTrainPublic(0);
+            showMessage('Passed turn - Your train is now public');
+            game.hasDrawn = false;
+            document.getElementById('btn-pass').disabled = true;
+            
+            if (game.checkRoundOver()) {
+                endRound();
+            } else {
+                nextPlayer();
+            }
+        }
+
+        function nextPlayer() {
+            game.currentPlayer = (game.currentPlayer + 1) % 4;
+            updateDisplay();
+            
+            if (game.currentPlayer !== 0) {
+                setTimeout(aiTurn, 800);
+            } else {
+                document.getElementById('btn-draw').disabled = false;
+            }
+        }
+
+        function aiTurn() {
+            const ai = aiPlayers[game.currentPlayer - 1];
+            const move = ai.chooseMove();
+            
+            if (move) {
+                game.playDomino(move.domino, move.train, game.currentPlayer);
+                const trainName = move.train === 'mexican' ? 'Mexican Train' : game.players[parseInt(move.train)];
+                showMessage(`${game.players[game.currentPlayer]} played ${move.domino} on ${trainName}'s train`);
+                
+                updateDisplay();
+                
+                if (game.checkRoundOver()) {
+                    setTimeout(endRound, 1000);
+                } else {
+                    setTimeout(nextPlayer, 1000);
+                }
+            } else {
+                const drawn = game.drawFromBoneyard(game.currentPlayer);
+                if (drawn) {
+                    showMessage(`${game.players[game.currentPlayer]} drew a tile`);
+                    updateDisplay();
+                    
+                    const aiRetry = aiPlayers[game.currentPlayer - 1];
+                    const retryMove = aiRetry.chooseMove();
+                    
+                    if (retryMove) {
+                        setTimeout(() => {
+                            game.playDomino(retryMove.domino, retryMove.train, game.currentPlayer);
+                            showMessage(`${game.players[game.currentPlayer]} played ${retryMove.domino}`);
+                            updateDisplay();
+                            
+                            if (game.checkRoundOver()) {
+                                setTimeout(endRound, 1000);
+                            } else {
+                                setTimeout(nextPlayer, 1000);
+                            }
+                        }, 800);
+                    } else {
+                        game.makeTrainPublic(game.currentPlayer);
+                        showMessage(`${game.players[game.currentPlayer]} passed - train is public`);
+                        updateDisplay();
+                        
+                        if (game.checkRoundOver()) {
+                            setTimeout(endRound, 1000);
+                        } else {
+                            setTimeout(nextPlayer, 1000);
+                        }
+                    }
+                } else {
+                    game.makeTrainPublic(game.currentPlayer);
+                    showMessage(`${game.players[game.currentPlayer]} passed - train is public`);
+                    updateDisplay();
+                    
+                    if (game.checkRoundOver()) {
+                        setTimeout(endRound, 1000);
+                    } else {
+                        setTimeout(nextPlayer, 1000);
+                    }
+                }
+            }
+        }
+
+        function endRound() {
+            const scores = game.getRoundScores();
+            for (let i = 0; i < 4; i++) {
+                game.totalScores[i] += scores[i];
+            }
+            
+            const tableHTML = `
+                <tr>
+                    <th>Player</th>
+                    <th>Round Score</th>
+                    <th>Total Score</th>
+                </tr>
+                ${game.players.map((player, i) => `
+                    <tr>
+                        <td>${player}</td>
+                        <td>${scores[i]}</td>
+                        <td>${game.totalScores[i]}</td>
+                    </tr>
+                `).join('')}
+            `;
+            
+            document.getElementById('round-scores').innerHTML = tableHTML;
+            
+            if (game.currentRound === game.roundEngines.length - 1) {
+                endGame();
+            } else {
+                document.getElementById('round-end-title').textContent = 
+                    `Round ${game.currentRound + 1} Complete!`;
+                document.getElementById('round-end-overlay').classList.remove('hidden');
+            }
+        }
+
+        function nextRound() {
+            document.getElementById('round-end-overlay').classList.add('hidden');
+            game.nextRound();
+            updateDisplay();
+            
+            if (game.currentPlayer !== 0) {
+                setTimeout(aiTurn, 1000);
+            }
+        }
+
+        function endGame() {
+            const winner = game.totalScores.indexOf(Math.min(...game.totalScores));
+            
+            const tableHTML = `
+                <tr>
+                    <th>Player</th>
+                    <th>Final Score</th>
+                </tr>
+                ${game.players.map((player, i) => `
+                    <tr style="${i === winner ? 'background: rgba(0,255,157,0.2); font-weight: bold;' : ''}">
+                        <td>${player} ${i === winner ? '🏆' : ''}</td>
+                        <td>${game.totalScores[i]}</td>
+                    </tr>
+                `).join('')}
+            `;
+            
+            document.getElementById('final-scores').innerHTML = tableHTML;
+            document.getElementById('game-end-overlay').classList.remove('hidden');
+            
+            if (winner === 0) {
+                saveToLeaderboard(game.totalScores[0], 13);
+            }
+        }
+
+        function showMessage(text) {
+            const existing = document.querySelector('.status-message');
+            if (existing) existing.remove();
+            
+            const msg = document.createElement('div');
+            msg.className = 'status-message';
+            msg.textContent = text;
+            document.body.appendChild(msg);
+            
+            setTimeout(() => msg.remove(), 3000);
+        }
+
+        function showRules() {
+            document.getElementById('rules-overlay').classList.remove('hidden');
+        }
+
+        function hideRules() {
+            document.getElementById('rules-overlay').classList.add('hidden');
+        }
+
+        function showLeaderboard() {
+            const leaderboard = getLeaderboard();
+            const content = document.getElementById('leaderboard-content');
+            
+            if (leaderboard.length === 0) {
+                content.innerHTML = '<p style="text-align: center; color: #888;">No games played yet!</p>';
+            } else {
+                content.innerHTML = leaderboard.map((entry, i) => `
+                    <div class="leaderboard-entry">
+                        <div>
+                            <strong>#${i + 1}</strong> - ${entry.date}
+                            <br><small style="color: #888;">${entry.difficulty.toUpperCase()} difficulty</small>
+                        </div>
+                        <div style="text-align: right;">
+                            <strong>${entry.score}</strong> points
+                            <br><small style="color: #888;">${entry.rounds} rounds</small>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            document.getElementById('leaderboard-overlay').classList.remove('hidden');
+        }
+
+        function hideLeaderboard() {
+            document.getElementById('leaderboard-overlay').classList.add('hidden');
+        }
+
+        function startGame() {
+            document.getElementById('welcome-overlay').classList.add('hidden');
+            game = new MexicanTrainGame(selectedDifficulty);
+            aiPlayers = [
+                new AIPlayer(game, 1, selectedDifficulty),
+                new AIPlayer(game, 2, selectedDifficulty),
+                new AIPlayer(game, 3, selectedDifficulty)
+            ];
+            updateDisplay();
+            
+            if (game.currentPlayer !== 0) {
+                setTimeout(aiTurn, 1000);
+            }
+        }
+
+        function newGame() {
+            document.getElementById('game-end-overlay').classList.add('hidden');
+            document.getElementById('welcome-overlay').classList.remove('hidden');
+        }
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        document.querySelectorAll('.difficulty-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedDifficulty = this.dataset.difficulty;
+            });
+        });
+    </script>
+</body>
+</html>
