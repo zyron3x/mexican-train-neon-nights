@@ -553,18 +553,16 @@ body.dealing::-webkit-scrollbar,
 
 @keyframes dominoLand {
     0% {
-        transform: translateX(50px) scale(0.8) rotateY(-15deg);
+        transform: scale(0.85);
         opacity: 0;
         filter: brightness(1.8);
     }
     60% {
-        transform: translateX(0) scale(1.15) rotateY(5deg);
-    }
-    80% {
-        transform: scale(0.95) rotateY(-2deg);
+        transform: scale(1.03);
+        opacity: 1;
     }
     100% {
-        transform: scale(1) rotateY(0);
+        transform: scale(1);
         opacity: 1;
         filter: brightness(1);
     }
@@ -2736,11 +2734,13 @@ body.targeting-cursor * {
     }
 
     .train-lane {
-        padding: 3px 4px;               /* less left/right */
-        gap: 5px;                        /* less space between info/engine/tiles */
-        min-height: 42px;               /* was 0 — explicit min prevents vertical jitter */
-        flex: 0 0 auto !important;      /* size to content, not equal share of viewport height */
-        transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease; /* exclude geometry */
+        padding: 3px 4px;
+        gap: 5px;
+        min-height: 42px;
+        flex: 0 0 auto !important;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+        overflow: visible;
+        overflow-y: clip;
     }
 
     .train-info {
@@ -2844,18 +2844,35 @@ body.targeting-cursor * {
     }
 
     .train-tiles {
-        padding: 0 60px 0 8px;         /* was 3px top/bottom — zero vertical padding prevents tile vertical bounce */
+        padding: 0 60px 0 8px;
         overflow-x: auto;
+        overflow-y: hidden;
         -webkit-overflow-scrolling: touch;
-        min-height: 42px;              /* was 0 — explicit min-height prevents collapse/expand jitter */
+        min-height: 42px;
         scrollbar-width: none;
         -ms-overflow-style: none;
-        scroll-behavior: auto;         /* prevent smooth scroll bounce on tile placement */
-        align-items: center;           /* explicit vertical centering */
+        scroll-behavior: auto !important;
+        scroll-snap-type: none;
+        align-items: center;
+    }
+
+    .train-tiles.auto-scrolling {
+        scroll-behavior: auto !important;
     }
 
     .train-tiles::-webkit-scrollbar {
         display: none;
+    }
+
+    .domino.horizontal {
+        width: 52px;
+        height: 36px;
+        min-width: 52px;
+        flex-shrink: 0;
+    }
+
+    .domino.horizontal .domino-half {
+        font-size: 1.05em;
     }
 
     /* ========================================
