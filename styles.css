@@ -2875,6 +2875,8 @@ body.targeting-cursor * {
         padding: 8px 10px !important;                              /* was 10px all sides */
         gap: 6px !important;                                       /* was 8px */
         padding-bottom: calc(8px + env(safe-area-inset-bottom)) !important;
+        overflow-y: visible !important;                            /* no internal scroll — page scrolls instead */
+        flex: none !important;                                     /* don't flex-shrink/grow — size to content */
     }
 
     .player-header {
@@ -2918,8 +2920,10 @@ body.targeting-cursor * {
         flex-direction: column !important;
         padding: 6px !important;
         min-height: auto !important;
+        max-height: none !important;                               /* no max height — expand with content */
+        height: auto !important;                                   /* size to content */
         gap: 0 !important;
-        overflow: visible !important;                              /* ensure selected domino lift is not clipped */
+        overflow: visible !important;
     }
 
     /* ========================================
@@ -2951,15 +2955,17 @@ body.targeting-cursor * {
     .player-hand {
         width: 100% !important;
         margin: 0 !important;
-        padding: 6px !important;                                   /* was 10px */
-        overflow-x: visible !important;                            /* was hidden — selected domino lift must not be clipped at separator */
+        padding: 6px !important;
+        overflow-x: visible !important;
         overflow-y: visible !important;
         display: flex !important;
         flex-wrap: wrap !important;
         justify-content: center !important;
-        gap: 8px;                                                  /* was 10px */
-        min-height: 80px;                                          /* matches new domino height */
-        order: 2;                                                  /* dominoes below powerups */
+        gap: 8px;
+        min-height: 80px;
+        max-height: none !important;                               /* no max height — rows expand freely */
+        height: auto !important;                                   /* size to content */
+        order: 2;
     }
 
     .player-hand .domino.vertical {
@@ -2982,6 +2988,14 @@ body.targeting-cursor * {
         flex: 1 !important;
         min-height: 40px !important;                               /* was 48px */
         font-size: 1em;
+    }
+
+    /* ========================================
+       LAYOUT - Natural page scrolling (mobile)
+       ======================================== */
+    .game-container {
+        height: auto !important;
+        min-height: 100vh !important;
     }
 
     /* ========================================
