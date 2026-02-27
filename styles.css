@@ -3047,3 +3047,45 @@ body.targeting-cursor * {
         height: 50px !important;
     }
 }
+
+/* ========================================
+   MOBILE MODAL FIXES
+   ======================================== */
+
+/* Fix 1: Rules modal — dark opaque background for readability on mobile */
+@media (max-width: 768px) {
+    #rules-overlay .modal {
+        background-image: none !important;
+        background-color: rgba(10, 10, 26, 0.98) !important;
+    }
+
+    #rules-overlay .modal::before {
+        display: none;
+    }
+}
+
+/* Fix 2: Welcome/New Game modal — smaller logo so container shifts up on mobile */
+@media (max-width: 768px) {
+    #welcome-overlay .modal-logo-above {
+        max-width: 100px !important;
+    }
+
+    #welcome-overlay .modal-logo-top {
+        margin-bottom: 0 !important;
+        padding: 0 !important;
+    }
+
+    #welcome-overlay .modal-wrapper {
+        gap: 10px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    #welcome-overlay .modal-logo-above {
+        max-width: 70px !important;
+    }
+
+    #welcome-overlay .modal-wrapper {
+        gap: 6px !important;
+    }
+}
