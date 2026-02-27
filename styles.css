@@ -19,7 +19,18 @@ body.loaded {
 
 /* Ensure lanes start dark before rendering */
 .train-lane {
-    background-color: #14142e;
+    flex: 1;
+    background: rgba(20, 20, 35, 0.6);
+    border: 1px solid rgba(0, 255, 157, 0.2);
+    border-radius: 8px;
+    padding: 5px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease; /* was 'all' — excludes height/padding to prevent vertical jitter */
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
     visibility: hidden;
 }
 
@@ -257,21 +268,6 @@ body.dealing::-webkit-scrollbar,
     gap: 6px;
 }
 
-.train-lane {
-    flex: 1;
-    background: rgba(20, 20, 35, 0.6);
-    border: 1px solid rgba(0, 255, 157, 0.2);
-    border-radius: 8px;
-    padding: 5px;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
-}
-
 .train-lane.playable {
     border-color: #00ff9d;
     box-shadow: 0 0 20px rgba(0, 255, 157, 0.4);
@@ -403,19 +399,19 @@ body.dealing::-webkit-scrollbar,
     padding: 8px;
     padding-right: 80px; /* Physical space for next tile (70px + 8px gap) */
     min-height: 70px;
-    scroll-behavior: smooth; /* Smooth scrolling animation */
-    scroll-snap-type: x proximity; /* Better scroll UX */
+    scroll-behavior: auto; /* was smooth — prevents left-then-bounce-back on mobile */
+    scroll-snap-type: none; /* was x proximity — disable snap to prevent jumpy repositioning */
     scrollbar-width: none;          /* Firefox — hide scrollbar */
     -ms-overflow-style: none;       /* IE/Edge — hide scrollbar */
+}
+
+.train-tiles.auto-scrolling {
+    scroll-behavior: smooth;
 }
 
 /* Hide scrollbar for Chrome/Safari/Opera — keep horizontal scroll functional */
 .train-tiles::-webkit-scrollbar {
     display: none;
-}
-
-.train-tiles.auto-scrolling {
-    scroll-behavior: smooth;
 }
 
 /* ============================================
@@ -2476,12 +2472,14 @@ body.targeting-cursor * {
     }
 
     .train-tiles {
-        padding: 3px 60px 3px 8px;     /* override base 8px top/bottom — 8+36+8=52px → 3+36+3=42px */
+        padding: 0 60px 0 8px;        /* was 3px top/bottom — zero vertical padding prevents tile vertical bounce */
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
-        min-height: 0;
+        min-height: 42px;              /* was 0 — explicit min-height prevents collapse/expand jitter */
         scrollbar-width: none;
         -ms-overflow-style: none;
+        scroll-behavior: auto;         /* prevent smooth scroll bounce on tile placement */
+        align-items: center;   
     }
 
     .train-tiles::-webkit-scrollbar {
@@ -2740,8 +2738,9 @@ body.targeting-cursor * {
     .train-lane {
         padding: 3px 4px;               /* less left/right */
         gap: 5px;                        /* less space between info/engine/tiles */
-        min-height: 0;
+        min-height: 42px;               /* was 0 — explicit min prevents vertical jitter */
         flex: 0 0 auto !important;      /* size to content, not equal share of viewport height */
+        transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease; /* exclude geometry */
     }
 
     .train-info {
@@ -2845,12 +2844,14 @@ body.targeting-cursor * {
     }
 
     .train-tiles {
-        padding: 3px 60px 3px 8px;     /* override base 8px top/bottom — 8+36+8=52px → 3+36+3=42px */
+        padding: 0 60px 0 8px;         /* was 3px top/bottom — zero vertical padding prevents tile vertical bounce */
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
-        min-height: 0;
+        min-height: 42px;              /* was 0 — explicit min-height prevents collapse/expand jitter */
         scrollbar-width: none;
         -ms-overflow-style: none;
+        scroll-behavior: auto;         /* prevent smooth scroll bounce on tile placement */
+        align-items: center;           /* explicit vertical centering */
     }
 
     .train-tiles::-webkit-scrollbar {
