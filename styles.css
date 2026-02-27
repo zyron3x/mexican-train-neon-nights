@@ -405,24 +405,13 @@ body.dealing::-webkit-scrollbar,
     min-height: 70px;
     scroll-behavior: smooth; /* Smooth scrolling animation */
     scroll-snap-type: x proximity; /* Better scroll UX */
+    scrollbar-width: none;          /* Firefox — hide scrollbar */
+    -ms-overflow-style: none;       /* IE/Edge — hide scrollbar */
 }
 
+/* Hide scrollbar for Chrome/Safari/Opera — keep horizontal scroll functional */
 .train-tiles::-webkit-scrollbar {
-    height: 6px;
-}
-
-.train-tiles::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 3px;
-}
-
-.train-tiles::-webkit-scrollbar-thumb {
-    background: rgba(0, 255, 157, 0.5);
-    border-radius: 3px;
-}
-
-.train-tiles::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 255, 157, 0.7);
+    display: none;
 }
 
 .train-tiles.auto-scrolling {
