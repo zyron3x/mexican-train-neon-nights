@@ -2998,7 +2998,7 @@ body.targeting-cursor * {
 
     .modal {
         padding: 30px 15px;
-        max-height: 60vh;                                /* more room for logo on mobile */
+        max-height: 75vh;                                /* more room for logo on mobile */
     }
 
     .modal h2 {
