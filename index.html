@@ -66,6 +66,27 @@
     </style>
 
     <link rel="stylesheet" href="styles.css">
+    
+    <!-- Vercel Web Analytics -->
+    <script>
+        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
+    <script>
+        (function () {
+            var host = window.location && window.location.hostname;
+            if (!host) return;
+
+            // Adjust this condition to include all hosts where Vercel Insights is available
+            var isVercelHost = host.endsWith('.vercel.app') || host === 'your-domain.com';
+
+            if (isVercelHost) {
+                var script = document.createElement('script');
+                script.defer = true;
+                script.src = '/_vercel/insights/script.js';
+                document.head.appendChild(script);
+            }
+        })();
+    </script>
 </head>
 <body>
     <h1 style="position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden;">
