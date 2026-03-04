@@ -1491,17 +1491,3 @@ function showPrivacy() {
 function hidePrivacy() {
     document.getElementById('privacy-overlay').classList.add('hidden');
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
